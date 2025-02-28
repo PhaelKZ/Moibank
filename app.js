@@ -37,7 +37,14 @@ onAuthStateChanged(auth, async (user) => {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 document.getElementById('usernameDisplay').textContent = userData.username;
-                document.getElementById('balance').textContent = userData.balance.toFixed(2);
+
+                // Verificar se o saldo é um número válido
+                let balance = parseFloat(userData.balance);
+                if (isNaN(balance)) {
+                    balance = 0.00; // Caso o saldo não seja um número válido, definir como 0
+                }
+
+                document.getElementById('balance').textContent = balance.toFixed(2);
 
                 loadOrders(user.uid); // 🔄 Carregar pedidos do usuário
             } else {
