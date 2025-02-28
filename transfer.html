@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moibank - Transferência</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="bank-name">Moibank</div>
+
+    <div class="transfer-container">
+        <h3>Transferir M̶oi</h3>
+        <input type="text" id="transferUsername" placeholder="Usuário para transferência" />
+        <input type="number" id="transferAmount" placeholder="Valor a transferir" min="1" />
+        <button id="transferButton">Transferir</button>
+    </div>
+
+    <div class="send-order-container">
+        <h3>Enviar Pedido</h3>
+        <input type="text" id="orderUsername" placeholder="Usuário destinatário" />
+        <input type="number" id="orderAmount" placeholder="Quantia do pedido" min="1" />
+        <input type="text" id="orderDescription" placeholder="Descrição do pedido" />
+        <button id="sendOrderButton">Enviar Pedido</button>
+    </div>
+
+    
+    <button class="back-button" onclick="location.href='dashboard.html'">Voltar</button>
+
+    <div id="errorMessage" class="error-message"></div>
+
+    <div class="footer">
+        <p>&copy; 2025 Moibank. Todos os direitos reservados.</p>
+    </div>
+
+    <script type="module" src="transfer.js"></script>
+</body>
+</html>

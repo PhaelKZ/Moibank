@@ -1,4 +1,16 @@
-// Configuração do Firebase
+import { 
+    initializeApp 
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+
+import { 
+    getAuth, onAuthStateChanged, signOut 
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+import { 
+    getFirestore, doc, getDoc, updateDoc, arrayUnion 
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+// 🔥 Configuração do Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBDTYSkgWXK7aXU4afEcJvzVxlJSSvIY14",
     authDomain: "moibank-e522d.firebaseapp.com",
@@ -10,176 +22,101 @@ const firebaseConfig = {
     measurementId: "G-8HSMSMEMJW"
 };
 
-// Inicializar o Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
+// 🔥 Inicializando Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Variável para armazenar o saldo atual
-let currentBalance = 0;
+// 👤 Autenticação e carregamento de dados do usuário
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        try {
+            const userDocRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userDocRef);
 
-// Função de logout
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                document.getElementById('usernameDisplay').textContent = userData.username;
+                document.getElementById('balance').textContent = userData.balance.toFixed(2);
+
+                loadOrders(user.uid); // 🔄 Carregar pedidos do usuário
+            } else {
+                console.error("Usuário não encontrado no Firestore.");
+                alert("Erro ao carregar dados do usuário.");
+            }
+        } catch (error) {
+            console.error("Erro ao obter dados do usuário:", error);
+        }
+    } else {
+        window.location.href = "login.html"; // Redireciona para login se não autenticado
+    }
+});
+
+// 📌 Função para salvar pedidos dentro do documento do usuário
+async function saveOrder(userId, amount, description) {
+    try {
+        const userDocRef = doc(db, "users", userId);
+
+        await updateDoc(userDocRef, {
+            orders: arrayUnion({
+                amount: amount,
+                date: new Date(),
+                description: description
+            })
+        });
+
+        console.log("Pedido salvo com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar pedido:", error);
+    }
+}
+
+// 📌 Função para carregar pedidos do usuário logado
+async function loadOrders(userId) {
+    try {
+        const userDocRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            console.log("Usuário não encontrado.");
+            document.getElementById("ordersList").innerHTML = "<p>Nenhum pedido encontrado.</p>";
+            return;
+        }
+
+        const userData = userDoc.data();
+        let ordersHTML = "";
+
+        if (!userData.orders || userData.orders.length === 0) {
+            ordersHTML = "<p>Nenhum pedido encontrado.</p>";
+        } else {
+            userData.orders.forEach((order) => {
+                let orderDate = order.date ? new Date(order.date.seconds * 1000).toLocaleString() : "Data não disponível";
+
+                ordersHTML += `
+                    <div class="order-item">
+                        <p><strong>Descrição:</strong> ${order.description || "Sem descrição"}</p>
+                        <p><strong>Quantidade:</strong> ${order.amount || "N/A"}</p>
+                        <p><strong>Data:</strong> ${orderDate}</p>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById("ordersList").innerHTML = ordersHTML;
+    } catch (error) {
+        console.error("Erro ao carregar pedidos:", error);
+        document.getElementById("ordersList").innerHTML = "<p>Erro ao carregar pedidos.</p>";
+    }
+}
+
+// 📌 Função de logout
 function logout() {
     signOut(auth).then(() => {
-        window.location.href = "login.html"; // Redireciona para a tela de login
+        window.location.href = "login.html";
     }).catch((error) => {
         console.error("Erro ao sair:", error);
     });
 }
 
-// Função para abrir a janela de solicitação de crédito
-function openCreditModal() {
-    const creditModal = document.getElementById('creditModal');
-    creditModal.style.display = 'flex';
-
-    // Atualizar o valor do slider ao ser alterado
-    const creditSlider = document.getElementById('creditSlider');
-    const sliderValue = document.getElementById('sliderValue');
-    creditSlider.oninput = function() {
-        sliderValue.innerText = 'R$ ' + creditSlider.value;
-    };
-}
-
-// Função para enviar a solicitação de crédito
-function submitCreditRequest() {
-    const creditSlider = document.getElementById('creditSlider');
-    const creditAmount = parseFloat(creditSlider.value);
-
-    if (creditAmount >= 1000) {
-        alert('Crédito de R$ ' + creditAmount + ' solicitado com sucesso!');
-        closeCreditModal();
-    } else {
-        alert('Valor mínimo de crédito é R$ 1.000');
-    }
-}
-
-// Função para fechar o modal
-function closeCreditModal() {
-    const creditModal = document.getElementById('creditModal');
-    creditModal.style.display = 'none';
-}
-
-// Monitorando o estado de autenticação
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // Usuário está logado
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            document.getElementById('usernameDisplay').textContent = userData.username;
-
-            // Carregar o saldo
-            document.getElementById('balance').textContent = userData.balance.toFixed(2);
-
-            // Carregar as últimas transações
-            const transactionsRef = collection(db, "transactions");
-            const q = query(transactionsRef, orderBy("date", "desc"), limit(5));
-            const querySnapshot = await getDocs(q);
-            let transactionsHTML = '';
-            querySnapshot.forEach((doc) => {
-                const transaction = doc.data();
-                transactionsHTML += `
-                    <div class="transaction-item">
-                        <p><strong>Data:</strong> ${new Date(transaction.date.seconds * 1000).toLocaleString()}</p>
-                        <p><strong>Valor:</strong> R$ ${transaction.amount.toFixed(2)}</p>
-                        <p><strong>Descrição:</strong> ${transaction.description}</p>
-                    </div>
-                `;
-            });
-            document.getElementById('transactionsList').innerHTML = transactionsHTML;
-
-            // Log para depuração: Verificar o saldo
-            console.log("Saldo do usuário:", userData.balance);
-
-            // Habilitar ou desabilitar o botão de transferência com base no saldo
-            const transferButton = document.getElementById('transferButton');
-            if (userData.balance > 0) {
-                transferButton.disabled = false;
-            } else {
-                transferButton.disabled = true;
-            }
-        }
-    } else {
-        // Usuário não está logado
-        window.location.href = "login.html"; // Redireciona para o login se o usuário não estiver autenticado
-    }
-});
-
-// Função para enviar pedidos (simulação)
-function sendOrder() {
-    const orderUsername = document.getElementById('orderUsername').value;
-    const orderAmount = parseInt(document.getElementById('orderAmount').value);
-
-    if (!orderUsername || isNaN(orderAmount) || orderAmount <= 0) {
-        alert("Por favor, preencha todos os campos corretamente.");
-        return;
-    }
-
-    // Simulando o envio de um pedido
-    const ordersRef = collection(db, "orders");
-    addDoc(ordersRef, {
-        user: orderUsername,
-        amount: orderAmount,
-        date: new Date(),
-    }).then(() => {
-        alert(`{orderAmount} pedido(s) enviado para o usuário ${orderUsername}`);
-    }).catch((error) => {
-        console.error("Erro ao enviar pedido:", error);
-        alert("Erro ao enviar o pedido. Tente novamente.");
-    });
-}
-
-// Função para transferir dinheiro
-async function initiateTransfer() {
-    const transferUsername = document.getElementById('transferUsername').value;
-    const transferAmount = parseFloat(document.getElementById('transferAmount').value);
-
-    if (!transferUsername || isNaN(transferAmount) || transferAmount <= 0) {
-        alert("Por favor, insira um usuário válido e um valor de transferência maior que zero.");
-        return;
-    }
-
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Você precisa estar logado para transferir.");
-        return;
-    }
-
-    // Verificando o saldo do usuário
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.balance < transferAmount) {
-            alert("Saldo insuficiente para realizar a transferência.");
-            return;
-        }
-
-        // Atualizando o saldo do usuário após a transferência
-        const newBalance = userData.balance - transferAmount;
-        await updateDoc(userDocRef, { balance: newBalance });
-
-        // Registrando a transação no Firestore
-        const transactionsRef = collection(db, "transactions");
-        await addDoc(transactionsRef, {
-            from: user.uid,
-            to: transferUsername,
-            amount: transferAmount,
-            description: `Transferência para ${transferUsername}`,
-            date: new Date(),
-        });
-
-        // Atualizando o saldo na interface
-        document.getElementById('balance').textContent = newBalance.toFixed(2);
-
-        alert(`Transferência de  {transferAmount.toFixed(2)} realizada com sucesso para {transferUsername}.`);
-    } else {
-        alert("Usuário não encontrado.");
-    }
-    }
+// Exemplo de uso para testar salvamento de pedidos
+// saveOrder("userId_123", 50, "Compra de teste");

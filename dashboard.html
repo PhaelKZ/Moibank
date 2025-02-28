@@ -4,18 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moibank - Dashboard</title>
-
-    <!-- Adicionar fontes do Google -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <!-- Link para o arquivo CSS externo -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="bank-name">
-        Moibank
-    </div>
+    <div class="bank-name">Moibank</div>
 
     <div class="dashboard-container">
         <div class="dashboard-header">
@@ -26,44 +20,22 @@
         <div class="balance-section">
             <h2>Saldo: M̶ <span id="balance">0,00</span></h2>
         </div>
-        
-        <div class="orders-section">
-            <h2>Pedidos: <span id="orders">0</span></h2>
-        </div>
 
-        <div class="transactions">
-            <h3>Últimas Transações</h3>
-            <div id="transactionsList">
-                <!-- As transações serão carregadas aqui -->
+        <div class="orders-section">
+            <h2>Seus Pedidos:</h2>
+            <div id="ordersList">
+                <p>Carregando...</p>
             </div>
         </div>
 
-        <!-- Janela de Transferência -->
-        <div class="transfer-container">
-            <h3>Transferir M̶oi</h3>
-            <input type="text" id="transferUsername" placeholder="Usuário para transferência" />
-            <input type="number" id="transferAmount" placeholder="Valor a transferir" min="1" />
-            <button id="transferButton" onclick="initiateTransfer()" disabled>Transferir</button>
+        <div class="request-transfer-container">
+            <button class="request-transfer-button" onclick="location.href='transfer.html'">Fazer Transferência</button>
         </div>
 
-        <!-- Enviar Pedidos -->
-        <div class="send-order-container">
-            <h3>Enviar Pedidos</h3>
-            <input type="text" id="orderUsername" placeholder="Usuário para enviar pedidos" />
-            <input type="number" id="orderAmount" placeholder="Quantidade de pedidos" min="1" />
-            <button id="sendOrderButton" onclick="sendOrder()">Enviar Pedido</button>
-        </div>
-        
         <div class="footer">
             <p>&copy; 2025 Moibank. Todos os direitos reservados.</p>
         </div>
-
     </div>
-
-    <!-- Adicionar o SDK do Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 
     <script type="module" src="app.js"></script>
 </body>
