@@ -115,19 +115,71 @@ function sendOrder() {
     const orderUsername = document.getElementById('orderUsername').value;
     const orderAmount = parseInt(document.getElementById('orderAmount').value);
 
-    if (orderUsername && orderAmount && orderAmount > 0) {
-        // Simulando o envio de um pedido
-        const ordersRef = collection(db, "orders");
-        addDoc(ordersRef, {
-            user: orderUsername,
-            amount: orderAmount,
-            date: new Date(),
-        }).then(() => {
-            alert(`Pedido de ${orderAmount} enviado para o usuário ${orderUsername}`);
-        }).catch((error) => {
-            console.error("Erro ao enviar pedido:", error);
-        });
-    } else {
+    if (!orderUsername || isNaN(orderAmount) || orderAmount <= 0) {
         alert("Por favor, preencha todos os campos corretamente.");
+        return;
     }
+
+    // Simulando o envio de um pedido
+    const ordersRef = collection(db, "orders");
+    addDoc(ordersRef, {
+        user: orderUsername,
+        amount: orderAmount,
+        date: new Date(),
+    }).then(() => {
+        alert(`{orderAmount} pedido(s) enviado para o usuário ${orderUsername}`);
+    }).catch((error) => {
+        console.error("Erro ao enviar pedido:", error);
+        alert("Erro ao enviar o pedido. Tente novamente.");
+    });
 }
+
+// Função para transferir dinheiro
+async function initiateTransfer() {
+    const transferUsername = document.getElementById('transferUsername').value;
+    const transferAmount = parseFloat(document.getElementById('transferAmount').value);
+
+    if (!transferUsername || isNaN(transferAmount) || transferAmount <= 0) {
+        alert("Por favor, insira um usuário válido e um valor de transferência maior que zero.");
+        return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Você precisa estar logado para transferir.");
+        return;
+    }
+
+    // Verificando o saldo do usuário
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.balance < transferAmount) {
+            alert("Saldo insuficiente para realizar a transferência.");
+            return;
+        }
+
+        // Atualizando o saldo do usuário após a transferência
+        const newBalance = userData.balance - transferAmount;
+        await updateDoc(userDocRef, { balance: newBalance });
+
+        // Registrando a transação no Firestore
+        const transactionsRef = collection(db, "transactions");
+        await addDoc(transactionsRef, {
+            from: user.uid,
+            to: transferUsername,
+            amount: transferAmount,
+            description: `Transferência para ${transferUsername}`,
+            date: new Date(),
+        });
+
+        // Atualizando o saldo na interface
+        document.getElementById('balance').textContent = newBalance.toFixed(2);
+
+        alert(`Transferência de  {transferAmount.toFixed(2)} realizada com sucesso para {transferUsername}.`);
+    } else {
+        alert("Usuário não encontrado.");
+    }
+    }
