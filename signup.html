@@ -93,7 +93,11 @@
     <div class="signup-container">
         <h1>Moibank</h1>
         <form id="signupForm">
+            <!-- Campo de Username -->
+            <input type="text" id="signupUsername" class="input-field" placeholder="Nome de usuário" required>
+            <!-- Campo de E-mail -->
             <input type="email" id="signupEmail" class="input-field" placeholder="E-mail" required>
+            <!-- Campo de Senha -->
             <input type="password" id="signupPassword" class="input-field" placeholder="Senha" required>
             <button type="submit" class="signup-button">Criar Conta</button>
         </form>
@@ -105,6 +109,7 @@
     <!-- Adicionar o SDK do Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 
     <script type="module">
         // Configuração do Firebase
@@ -122,18 +127,22 @@
         // Inicializar o Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // Seleção dos campos
         const signupForm = document.getElementById('signupForm');
+        const signupUsername = document.getElementById('signupUsername');
         const signupEmail = document.getElementById('signupEmail');
         const signupPassword = document.getElementById('signupPassword');
 
         // Função de criação de conta
         signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const username = signupUsername.value;
             const email = signupEmail.value;
             const password = signupPassword.value;
 
@@ -141,8 +150,23 @@
                 .then((userCredential) => {
                     const user = userCredential.user;
                     alert('Conta criada com sucesso! Bem-vindo, ' + user.email);
-                    // Redirecionar para a página de login após criação da conta
-                    window.location.href = "login.html";
+
+                    // Salvar o username no Firestore
+                    const userId = user.uid;
+                    const userRef = doc(db, "users", userId);
+                    setDoc(userRef, {
+                        username: username,
+                        email: email,
+                    })
+                    .then(() => {
+                        console.log("Username salvo no Firestore");
+                        // Redirecionar para a página de login após criação da conta
+                        window.location.href = "login.html";
+                    })
+                    .catch((error) => {
+                        const errorMessage = error.message;
+                        alert('Erro ao salvar dados no Firestore: ' + errorMessage);
+                    });
                 })
                 .catch((error) => {
                     const errorMessage = error.message;
