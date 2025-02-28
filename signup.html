@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moibank - Criar Conta</title>
+
+    <!-- Adicionar fontes do Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #8E44AD; /* Roxo similar ao NuBank */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+
+        .signup-container {
+            background-color: #fff;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #8E44AD;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: #8E44AD;
+        }
+
+        .signup-button {
+            width: 100%;
+            padding: 15px;
+            background-color: #8E44AD;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .signup-button:hover {
+            background-color: #732d91;
+        }
+
+        .signup-footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .signup-footer a {
+            color: #8E44AD;
+            text-decoration: none;
+        }
+
+        .signup-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Moibank</h1>
+        <form id="signupForm">
+            <input type="email" id="signupEmail" class="input-field" placeholder="E-mail" required>
+            <input type="password" id="signupPassword" class="input-field" placeholder="Senha" required>
+            <button type="submit" class="signup-button">Criar Conta</button>
+        </form>
+        <div class="signup-footer">
+            <p>Já tem uma conta? <a href="login.html">Faça login!</a></p>
+        </div>
+    </div>
+
+    <!-- Adicionar o SDK do Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+
+    <script type="module">
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "seu-auth-domain.firebaseapp.com",
+            projectId: "seu-project-id",
+            storageBucket: "seu-storage-bucket.appspot.com",
+            messagingSenderId: "seu-messaging-sender-id",
+            appId: "seu-app-id",
+            measurementId: "seu-measurement-id"
+        };
+
+        // Inicializar o Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Seleção dos campos
+        const signupForm = document.getElementById('signupForm');
+        const signupEmail = document.getElementById('signupEmail');
+        const signupPassword = document.getElementById('signupPassword');
+
+        // Função de criação de conta
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = signupEmail.value;
+            const password = signupPassword.value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    alert('Conta criada com sucesso! Bem-vindo, ' + user.email);
+                    // Redirecionar para a página de login após criação da conta
+                    window.location.href = "login.html";
+                })
+                .catch((error) => {
+                    const errorMessage = error.message;
+                    alert('Erro ao criar conta: ' + errorMessage);
+                });
+        });
+    </script>
+</body>
+</html>
